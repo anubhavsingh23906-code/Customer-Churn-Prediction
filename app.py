@@ -4,6 +4,10 @@ import joblib
 from pathlib import Path
 
 
+# --------------------------------------------------
+# PAGE CONFIG
+# --------------------------------------------------
+
 st.set_page_config(
     page_title="Customer Churn Predictor",
     page_icon="📊",
@@ -11,27 +15,49 @@ st.set_page_config(
 )
 
 
+# --------------------------------------------------
+# LOAD MODEL
+# --------------------------------------------------
+
 BASE_DIR = Path(__file__).resolve().parent
 MODEL_PATH = BASE_DIR / "churn_model.pkl"
 
-model = joblib.load(MODEL_PATH)
+if not MODEL_PATH.exists():
+    st.error(f"Model file not found: {MODEL_PATH}")
+    st.stop()
+
+try:
+    model = joblib.load(MODEL_PATH)
+except Exception as e:
+    st.error(f"Unable to load model: {e}")
+    st.stop()
 
 
+# --------------------------------------------------
+# TITLE
+# --------------------------------------------------
 
 st.title("📊 Customer Churn Prediction")
+
 st.write(
-    "Predict whether a customer is likely to churn "
+    "Predict whether a telecom customer is likely to churn "
     "using a machine learning model."
 )
 
 st.divider()
 
 
+# --------------------------------------------------
+# CUSTOMER INFORMATION
+# --------------------------------------------------
+
 st.header("👤 Customer Information")
 
 col1, col2, col3 = st.columns(3)
 
+
 with col1:
+
     gender = st.selectbox(
         "Gender",
         ["Male", "Female"]
@@ -59,7 +85,9 @@ with col1:
         value=12
     )
 
+
 with col2:
+
     phone_service = st.selectbox(
         "Phone Service",
         ["Yes", "No"]
@@ -85,7 +113,9 @@ with col2:
         ["Yes", "No", "No internet service"]
     )
 
+
 with col3:
+
     device_protection = st.selectbox(
         "Device Protection",
         ["Yes", "No", "No internet service"]
@@ -112,18 +142,25 @@ with col3:
     )
 
 
+# --------------------------------------------------
+# BILLING INFORMATION
+# --------------------------------------------------
 
 st.header("💳 Billing Information")
 
 col1, col2, col3 = st.columns(3)
 
+
 with col1:
+
     paperless_billing = st.selectbox(
         "Paperless Billing",
         ["Yes", "No"]
     )
 
+
 with col2:
+
     payment_method = st.selectbox(
         "Payment Method",
         [
@@ -134,23 +171,29 @@ with col2:
         ]
     )
 
+
 with col3:
+
     monthly_charges = st.number_input(
         "Monthly Charges",
         min_value=0.0,
         value=70.0
     )
 
+
 total_charges = st.number_input(
     "Total Charges",
     min_value=0.0,
-    value=monthly_charges * tenure
+    value=float(monthly_charges * tenure)
 )
 
 
 st.divider()
 
 
+# --------------------------------------------------
+# PREDICTION
+# --------------------------------------------------
 
 if st.button(
     "🔮 Predict Churn",
@@ -158,40 +201,87 @@ if st.button(
 ):
 
     input_data = pd.DataFrame({
+
         "gender": [gender],
+
         "SeniorCitizen": [senior_citizen],
+
         "Partner": [partner],
+
         "Dependents": [dependents],
+
         "tenure": [tenure],
+
         "PhoneService": [phone_service],
+
         "MultipleLines": [multiple_lines],
+
         "InternetService": [internet_service],
+
         "OnlineSecurity": [online_security],
+
         "OnlineBackup": [online_backup],
+
         "DeviceProtection": [device_protection],
+
         "TechSupport": [tech_support],
+
         "StreamingTV": [streaming_tv],
+
         "StreamingMovies": [streaming_movies],
+
         "Contract": [contract],
+
         "PaperlessBilling": [paperless_billing],
+
         "PaymentMethod": [payment_method],
+
         "MonthlyCharges": [monthly_charges],
+
         "TotalCharges": [total_charges]
     })
 
 
-    
+    # ----------------------------------------------
+    # MODEL PREDICTION
+    # ----------------------------------------------
+
     prediction = model.predict(input_data)[0]
 
-    probability = model.predict_proba(input_data)[0][1]
+    probabilities = model.predict_proba(input_data)[0]
 
-    probability_percent = probability * 100
-
-
-    st.subheader("Prediction Result")
+    classes = list(model.classes_)
 
 
-    if prediction == 1:
+    # Automatically identify churn class
+    if "Yes" in classes:
+        churn_class = "Yes"
+
+    elif 1 in classes:
+        churn_class = 1
+
+    else:
+        st.error(
+            f"Could not identify churn class. Model classes: {classes}"
+        )
+        st.stop()
+
+
+    churn_index = classes.index(churn_class)
+
+    churn_probability = probabilities[churn_index]
+
+    probability_percent = churn_probability * 100
+
+
+    # ----------------------------------------------
+    # RESULT
+    # ----------------------------------------------
+
+    st.subheader("🔮 Prediction Result")
+
+
+    if prediction == churn_class:
 
         st.error("⚠️ High Churn Risk")
 
@@ -204,23 +294,25 @@ if st.button(
             "This customer is predicted to be at risk of leaving."
         )
 
+
         st.write("### 💡 Recommended Actions")
 
         st.write(
-            "- Offer a personalized retention discount"
+            "• Offer a personalized retention discount"
         )
 
         st.write(
-            "- Consider upgrading the customer's contract"
+            "• Consider upgrading the customer's contract"
         )
 
         st.write(
-            "- Provide technical support assistance"
+            "• Provide technical support assistance"
         )
 
         st.write(
-            "- Offer loyalty benefits"
+            "• Offer loyalty benefits"
         )
+
 
     else:
 
@@ -236,7 +328,11 @@ if st.button(
         )
 
 
-    st.write("### Customer Data")
+    # ----------------------------------------------
+    # CUSTOMER DATA
+    # ----------------------------------------------
+
+    st.write("### 📋 Customer Data")
 
     st.dataframe(
         input_data,
