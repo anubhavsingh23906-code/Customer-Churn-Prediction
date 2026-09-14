@@ -1,10 +1,7 @@
 import streamlit as st
 import pandas as pd
 import joblib
-
-
-
-model = joblib.load("churn_model.pkl")
+from pathlib import Path
 
 
 st.set_page_config(
@@ -12,6 +9,12 @@ st.set_page_config(
     page_icon="📊",
     layout="wide"
 )
+
+
+BASE_DIR = Path(__file__).resolve().parent
+MODEL_PATH = BASE_DIR / "churn_model.pkl"
+
+model = joblib.load(MODEL_PATH)
 
 
 
