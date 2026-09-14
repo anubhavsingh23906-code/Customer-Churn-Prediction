@@ -3,15 +3,10 @@ import pandas as pd
 import joblib
 
 
-# -----------------------------
-# Load Model
-# -----------------------------
-model = joblib.load("models/churn_model.pkl")
+
+model = joblib.load("churn_model.pkl")
 
 
-# -----------------------------
-# Page Configuration
-# -----------------------------
 st.set_page_config(
     page_title="Customer Churn Predictor",
     page_icon="📊",
@@ -19,9 +14,7 @@ st.set_page_config(
 )
 
 
-# -----------------------------
-# Title
-# -----------------------------
+
 st.title("📊 Customer Churn Prediction")
 st.write(
     "Predict whether a customer is likely to churn "
@@ -31,9 +24,6 @@ st.write(
 st.divider()
 
 
-# -----------------------------
-# Customer Information
-# -----------------------------
 st.header("👤 Customer Information")
 
 col1, col2, col3 = st.columns(3)
@@ -119,9 +109,7 @@ with col3:
     )
 
 
-# -----------------------------
-# Billing Information
-# -----------------------------
+
 st.header("💳 Billing Information")
 
 col1, col2, col3 = st.columns(3)
@@ -160,9 +148,7 @@ total_charges = st.number_input(
 st.divider()
 
 
-# -----------------------------
-# Prediction
-# -----------------------------
+
 if st.button(
     "🔮 Predict Churn",
     use_container_width=True
@@ -191,7 +177,7 @@ if st.button(
     })
 
 
-    # Prediction
+    
     prediction = model.predict(input_data)[0]
 
     probability = model.predict_proba(input_data)[0][1]
